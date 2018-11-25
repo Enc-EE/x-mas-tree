@@ -34,6 +34,8 @@ export class App {
 
         this.animation.addView(this.game);
         this.game.requestNewGame.addEventListener(this.newGame);
+        console.log("start");
+        
         this.game.start();
     }
 

@@ -21,7 +21,7 @@ export class MainMenuView extends View {
     public requestStart: EEvent;
 
     constructor() {
-        super();
+        super("MenuView");
         this.requestStart = new EEvent();
         this.options = ["Start Game", "Show / Hide Controls"];
         this.selectedOption = 0;

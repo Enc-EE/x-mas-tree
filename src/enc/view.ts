@@ -8,6 +8,9 @@ export class View implements Animatable {
     public width: number;
     public height: number;
 
+    constructor(public name: string) {
+    }
+
     public update = (timeDiff: number) => {
         if (this.isVisible) {
             for (const update of this.updates) {

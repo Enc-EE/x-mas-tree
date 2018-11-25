@@ -114,7 +114,7 @@ export class Animation {
     }
 
     private lastFrameTime: number;
-    private fps = 40;
+    private fps = 32;
     private fpsInterval = 1000 / this.fps;
 
     private animate = () => {
@@ -132,9 +132,9 @@ export class Animation {
             for (const update of this.updates) {
                 update(timeDiff);
             }
-
+            
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
+            
             for (const animate of this.animations) {
                 animate(this.ctx, this.canvas.width, this.canvas.height);
             }
