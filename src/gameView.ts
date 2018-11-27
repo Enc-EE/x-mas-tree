@@ -1,9 +1,10 @@
 import { View } from "./enc/view";
 import { Controller, Signals } from "./enc/controller";
-import { Snake } from "./snake";
-import death from "./assets/skull-and-crossbones.png";
 import { EEvent } from "./enc/eEvent";
 import { Player } from "./player";
+import treeImageAsset from "./assets/tree.png";
+import { Tree } from "./tree";
+import { BallSpawner } from "./ballSpawner";
 
 export class GameView extends View {
     private allowNewGame: boolean;
@@ -15,25 +16,30 @@ export class GameView extends View {
     }
 
     public start = () => {
+        this.addAnimation(this.animation);
+        var tree = new Tree();
+        this.addAnimatable(tree);
+        var spawner = new BallSpawner();
+        this.addAnimatable(spawner);
         for (let i = 0; i < this.controllers.length; i++) {
             const controller = this.controllers[i];
-            var player = new Player(controller, i / this.controllers.length);
-            console.log("hi");
-            
+            var player = new Player(controller, i / this.controllers.length, spawner, tree);
+
             this.addAnimatable(player);
         }
 
         // this.addUpdate(this.update);
-        this.addAnimation(this.animation);
     }
 
     // public update = (timeDiff: number) => {
     //     console.log("hallo");
-        
+
     // };
 
     public animation = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
         ctx.fillStyle = "black";
-        ctx.fillRect(0, height, width, -20);
+        ctx.fillRect(0, height, width, -30);
+        ctx.fillStyle = "brown";
+        ctx.fillRect(0, height - 30, width, -70);
     };
 }

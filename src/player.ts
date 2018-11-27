@@ -1,6 +1,11 @@
 import { Animatable } from "./enc/animation";
 import { Controller, Signals } from "./enc/controller";
 import playerImageAsset from "./assets/player.png";
+import { Helper } from "./enc/helper";
+import { Ball } from "./ball";
+import { BallSpawner } from "./ballSpawner";
+import { Rectangle } from "./enc/rectangle";
+import { Tree } from "./tree";
 
 export class Player implements Animatable {
 
@@ -14,119 +19,119 @@ export class Player implements Animatable {
     isJumping: boolean;
     baseY: number;
 
-    constructor(private controller: Controller, public playerNumber: number) {
+    ballLeft: Ball;
+    ballRight: Ball;
+
+    constructor(private controller: Controller, public playerNumber: number, private ballSpawner: BallSpawner, private tree: Tree) {
         this.playerImage = new Image();
         this.playerImage.src = playerImageAsset;
-        this.playerImage.onload = () => {
-            var tempCanvas = document.createElement("canvas");
-            tempCanvas.width = this.playerImage.naturalWidth;
-            tempCanvas.height = this.playerImage.naturalHeight;
-
-            var tempCtx = tempCanvas.getContext("2d");
-
-            tempCtx.drawImage(this.playerImage, 0, 0);
-            var imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-
-            for (let i = 0; i < imageData.data.length; i = i + 4) {
-                var r = imageData.data[i];
-                var g = imageData.data[i + 1];
-                var b = imageData.data[i + 2];
-                var a = imageData.data[i + 3];
-
-                if (a > 0.5) {
-                    if (r - g > 50 && r - b > 50) {
-                        var h = this.playerNumber * 360;
-                        var u = 1;
-                        var e = 0.5;
-
-                        var c = e * u;
-                        var x = c * (1 - Math.abs((h / 60) % 2 - 1));
-                        var m = e - c;
-
-                        var rx;
-                        var gx;
-                        var bx;
-                        if (h < 60) {
-                            rx = c;
-                            gx = x;
-                            bx = 0;
-                        } else if (h < 120) {
-                            rx = x;
-                            gx = c;
-                            bx = 0;
-                        } else if (h < 180) {
-                            rx = 0;
-                            gx = c;
-                            bx = x;
-                        } else if (h < 240) {
-                            rx = 0;
-                            gx = x;
-                            bx = c;
-                        } else if (h < 300) {
-                            rx = x;
-                            gx = 0;
-                            bx = c;
-                        } else {
-                            rx = c;
-                            gx = 0;
-                            bx = x;
-                        }
-                        rx = (rx + m) * 255;
-                        gx = (gx + m) * 255;
-                        bx = (bx + m) * 255;
-
-                        imageData.data[i] = rx;
-                        imageData.data[i + 1] = gx;
-                        imageData.data[i + 2] = bx;
-                    }
-                }
-            }
-            tempCtx.putImageData(imageData, 0, 0);
-
-            this.playerImage.src = tempCanvas.toDataURL();
-            this.playerImage.onload = () => { };
-        }
+        Helper.colorImage(this.playerImage, this.playerNumber * 360);
         this.x = 0;
         this.y = 0;
         this.vy = 0;
         this.g = 3000;
+        this.isJumping = false;
+        this.ballLeft = null;
+        this.ballRight = null;
+        controller.signal.addEventListener(this.controllerSignal)
+
 
         this.color = "hsl(" + playerNumber * 360 + ",100%, 30%)"
     }
 
+    public points = 0;
+
+    private controllerSignal = (sender: Controller, signal: Signals) => {
+        switch (signal) {
+            case Signals.up:
+                if (!this.isJumping) {
+                    this.isJumping = true;
+                    this.vy = -2000;
+                    this.baseY = this.y;
+                }
+                break;
+            case Signals.a:
+                if (this.ballLeft == null) {
+                    var leftBall = this.ballSpawner.getBall(this.getLeftHandHitRect());
+                    if (leftBall) {
+                        leftBall.color(this.playerNumber);
+                        this.ballLeft = leftBall;
+                    }
+                } else {
+                    var points = this.tree.addBall(this.ballLeft);
+                    console.log(points);
+                    
+                    if (points > 0) {
+                        this.points += points;
+                        this.ballLeft = null;
+                    }
+                }
+                if (this.ballRight == null) {
+                    var rightBall = this.ballSpawner.getBall(this.getRightHandHitRect());
+                    if (rightBall) {
+                        rightBall.color(this.playerNumber);
+                        this.ballRight = rightBall;
+                    }
+                } else {
+                    var points = this.tree.addBall(this.ballRight);
+                    console.log(points);
+
+                    if (points > 0) {
+                        this.points += points;
+                        this.ballRight = null;
+                    }
+                }
+                break;
+        }
+    }
+
+    private leftHandOffset = 5;
+    private rightHandOffset = 120;
+    private topHandOffset = 140
+    private handSize = 25;
+
+    private getLeftHandHitRect = () => {
+        return new Rectangle(this.x + this.leftHandOffset, this.y + this.topHandOffset, this.handSize, this.handSize);
+    }
+
+    private getRightHandHitRect = () => {
+        return new Rectangle(this.x + this.rightHandOffset, this.y + this.topHandOffset, this.handSize, this.handSize);
+    }
+
     public update = (timeDiff: number) => {
-        this.x = this.x + this.controller.xAxes * timeDiff * 500;
+        this.x = this.x + this.controller.xAxes * timeDiff * 500 * 2;
         if (this.controller.xAxes < 0) {
             this.moveLeft = true;
         } else if (this.controller.xAxes > 0) {
             this.moveLeft = false;
         }
 
-        if (this.controller.yAxes < -0.5 && !this.isJumping) {
-            console.log("jump");
-            this.isJumping = true;
-            this.vy = -2000;
-            this.baseY = this.y;
-        }
-
         this.y = this.y + this.vy * timeDiff;
 
         if (this.isJumping) {
-            
+
             this.vy = this.vy + this.g * timeDiff;
             if (this.y > this.baseY) {
                 this.vy = 0;
                 this.y = this.baseY;
                 this.isJumping = false;
-                console.log("jumped");
             }
+        }
+
+        if (this.ballLeft) {
+            this.ballLeft.x = this.x + this.leftHandOffset + this.handSize / 2;
+            this.ballLeft.y = this.y + this.topHandOffset - this.handSize;
+        }
+
+        if (this.ballRight) {
+            this.ballRight.x = this.x + this.rightHandOffset + this.handSize / 2;
+            this.ballRight.y = this.y + this.topHandOffset - this.handSize;
         }
     }
 
     public draw = (ctx: CanvasRenderingContext2D, width?: number, height?: number) => {
-        // ctx.putImageData(this.imageDate, this.x, this.y);
-        if (this.y == 0) {
-            this.y = height - 20 - this.playerImage.height;
+        if (this.y == 0 && this.playerImage.naturalHeight) {
+            this.y = height - 40 - this.playerImage.naturalHeight;
         }
 
         if (!this.moveLeft) {
@@ -137,5 +142,18 @@ export class Player implements Animatable {
         } else {
             ctx.drawImage(this.playerImage, this.x, this.y);
         }
+
+        if (this.ballLeft) {
+            this.ballLeft.draw(ctx, width, height);
+        }
+
+        if (this.ballRight) {
+            this.ballRight.draw(ctx, width, height);
+        }
+
+        ctx.textBaseline = "top";
+        ctx.textAlign = "left";
+        ctx.fillStyle = this.color;
+        ctx.fillText(this.points.toString(), 0, height * this.playerNumber);
     }
 }
