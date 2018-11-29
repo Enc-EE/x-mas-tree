@@ -21,6 +21,7 @@ export class Player implements Animatable {
 
     ballLeft: Ball;
     ballRight: Ball;
+    position: any;
 
     constructor(private controller: Controller, public playerNumber: number, private ballSpawner: BallSpawner, private tree: Tree) {
         this.playerImage = new Image();
@@ -42,46 +43,48 @@ export class Player implements Animatable {
     public points = 0;
 
     private controllerSignal = (sender: Controller, signal: Signals) => {
-        switch (signal) {
-            case Signals.up:
-                if (!this.isJumping) {
-                    this.isJumping = true;
-                    this.vy = -2000;
-                    this.baseY = this.y;
-                }
-                break;
-            case Signals.a:
-                if (this.ballLeft == null) {
-                    var leftBall = this.ballSpawner.getBall(this.getLeftHandHitRect());
-                    if (leftBall) {
-                        leftBall.color(this.playerNumber);
-                        this.ballLeft = leftBall;
-                    }
-                } else {
-                    var points = this.tree.addBall(this.ballLeft);
-                    console.log(points);
-                    
-                    if (points > 0) {
-                        this.points += points;
-                        this.ballLeft = null;
-                    }
-                }
-                if (this.ballRight == null) {
-                    var rightBall = this.ballSpawner.getBall(this.getRightHandHitRect());
-                    if (rightBall) {
-                        rightBall.color(this.playerNumber);
-                        this.ballRight = rightBall;
-                    }
-                } else {
-                    var points = this.tree.addBall(this.ballRight);
-                    console.log(points);
+        if (!this.position) {
+            switch (signal) {
+                case Signals.up:
+                    if (!this.isJumping) {
+                        this.isJumping = true;
+                        console.log(new Date().toISOString() + ': ' + this.y);
 
-                    if (points > 0) {
-                        this.points += points;
-                        this.ballRight = null;
+                        this.vy = -2000 / 969 * window.innerHeight;
+                        this.baseY = this.y;
                     }
-                }
-                break;
+                    break;
+                case Signals.a:
+                    if (this.ballLeft == null) {
+                        var leftBall = this.ballSpawner.getBall(this.getLeftHandHitRect());
+                        if (leftBall) {
+                            leftBall.color(this.playerNumber);
+                            this.ballLeft = leftBall;
+                        }
+                    } else {
+                        var points = this.tree.addBall(this.ballLeft);
+
+                        if (points > 0) {
+                            this.points += points;
+                            this.ballLeft = null;
+                        }
+                    }
+                    if (this.ballRight == null) {
+                        var rightBall = this.ballSpawner.getBall(this.getRightHandHitRect());
+                        if (rightBall) {
+                            rightBall.color(this.playerNumber);
+                            this.ballRight = rightBall;
+                        }
+                    } else {
+                        var points = this.tree.addBall(this.ballRight);
+
+                        if (points > 0) {
+                            this.points += points;
+                            this.ballRight = null;
+                        }
+                    }
+                    break;
+            }
         }
     }
 
@@ -99,21 +102,28 @@ export class Player implements Animatable {
     }
 
     public update = (timeDiff: number) => {
-        this.x = this.x + this.controller.xAxes * timeDiff * 500 * 2;
-        if (this.controller.xAxes < 0) {
-            this.moveLeft = true;
-        } else if (this.controller.xAxes > 0) {
-            this.moveLeft = false;
+        if (!this.position) {
+            this.x = this.x + this.controller.xAxes * timeDiff * 500 * 2;
+            if (this.controller.xAxes < 0) {
+                this.moveLeft = true;
+            } else if (this.controller.xAxes > 0) {
+                this.moveLeft = false;
+            }
         }
 
         this.y = this.y + this.vy * timeDiff;
 
         if (this.isJumping) {
 
+            if (this.vy <= 0 && this.vy + this.g * timeDiff >= 0) {
+                
+                console.log(new Date().toISOString() + ': ' + this.y);
+            }
             this.vy = this.vy + this.g * timeDiff;
             if (this.y > this.baseY) {
                 this.vy = 0;
                 this.y = this.baseY;
+                console.log(new Date().toISOString() + ': ' + this.y);
                 this.isJumping = false;
             }
         }
@@ -154,6 +164,16 @@ export class Player implements Animatable {
         ctx.textBaseline = "top";
         ctx.textAlign = "left";
         ctx.fillStyle = this.color;
+        ctx.font = "60px sans-serif";
         ctx.fillText(this.points.toString(), 0, height * this.playerNumber);
+
+        if (this.position) {
+            ctx.font = (80 - this.position * 7) + "px sans-serif";
+            ctx.fillText(this.position + ".", 150, height * this.playerNumber);
+        }
+    }
+
+    public end = (position: number) => {
+        this.position = position;
     }
 }

@@ -56,7 +56,12 @@ export class View implements Animatable {
     }
 
     public removeAnimatable = (animatable: Animatable) => {
+        console.log(animatable);
+        
+        console.log(this.animations.length);
+        
         this.updates.splice(this.updates.indexOf(animatable.update), 1);
         this.animations.splice(this.animations.indexOf(animatable.draw), 1);
+        console.log(this.animations.length);
     }
 }

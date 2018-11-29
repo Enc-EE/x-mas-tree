@@ -12,8 +12,8 @@ export class BallSpawner implements Animatable {
     private balls: Ball[] = [];
     ticker: AnimationTicker;
 
-    constructor() {
-        this.ticker = new AnimationTicker(3000, this.spawnBall);
+    constructor(intervalMs: number) {
+        this.ticker = new AnimationTicker(intervalMs, this.spawnBall);
     }
 
     public getBall = (rectangle: Rectangle): Ball => {

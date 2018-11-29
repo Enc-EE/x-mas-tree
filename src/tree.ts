@@ -39,7 +39,6 @@ export class Tree implements Animatable {
                 this.balls.push(ball);
 
                 let pointsY = 1 - (ball.y - this.y) / this.height;
-                console.log(pointsY);
                 
                 for (let i = 0; i < this.pointsLines.length - 1; i++) {
                     const pointsLine = this.pointsLines[i];
@@ -78,6 +77,7 @@ export class Tree implements Animatable {
             ctx.fillStyle = "black";
             ctx.textBaseline = "bottom";
             ctx.textAlign = "right";
+            ctx.font = "60px sans-serif";
             ctx.fillText((i + 1).toString(), this.x + this.width, this.y + this.height * pointLine);
         }
 
