@@ -51,7 +51,7 @@ export class MainMenuView extends View {
         });
         this.gamepadScanner.start();
 
-        var rtc = new WebRtcConnector();
+        // var rtc = new WebRtcConnector();
 
         var keyboard = new KeyboardControls("arrows", 38, 37, 40, 39, 32);
         this.addController(keyboard);

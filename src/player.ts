@@ -30,7 +30,7 @@ export class Player implements Animatable {
         this.x = 0;
         this.y = 0;
         this.vy = 0;
-        this.g = 3000;
+        this.g = 3000 / 969 * window.innerHeight;
         this.isJumping = false;
         this.ballLeft = null;
         this.ballRight = null;
